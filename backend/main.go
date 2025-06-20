@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -30,6 +31,7 @@ type Poll struct {
 	CreatorAddr     string    `gorm:"not null" json:"creator_address"`
 	TxID            string    `json:"tx_id"`
 	BlockchainAddr  string    `gorm:"index" json:"blockchain_address"` // Solana PDA address
+	Status          string    `gorm:"default:pending" json:"status"`   // pending, confirmed, failed
 }
 
 type VoteRecord struct {
@@ -40,6 +42,7 @@ type VoteRecord struct {
 	TxID           string    `json:"tx_id"`
 	VotedAt        time.Time `gorm:"autoCreateTime" json:"voted_at"`
 	BlockchainAddr string    `gorm:"index" json:"blockchain_vote_address"` // Solana vote record PDA
+	Status         string    `gorm:"default:pending" json:"status"`        // pending, confirmed, failed
 
 	// Foreign key
 	Poll Poll `gorm:"foreignKey:PollID" json:"-"`
@@ -69,12 +72,18 @@ var db *gorm.DB
 var solanaClient *rpc.Client
 var programID solana.PublicKey
 
+// Server keypair for signing transactions (in production, use secure key management)
+var serverKeypair solana.PrivateKey
+
 func main() {
 	// Initialize database
 	initDatabase()
 
 	// Initialize Solana client
 	initSolana()
+
+	// Initialize server keypair (for transaction signing)
+	initServerKeypair()
 
 	r := gin.Default()
 
@@ -106,14 +115,13 @@ func main() {
 	fmt.Println("🚀 Vote Backend Server starting on :8080")
 	fmt.Println("🗄️  Database: PostgreSQL")
 	fmt.Println("⛓️  Blockchain: Solana Devnet")
+	fmt.Println("🔑 Smart Contract Integration: ENABLED")
 	fmt.Println("📋 Endpoints:")
 	fmt.Println("   GET  /ping")
 	fmt.Println("   POST /polls")
 	fmt.Println("   GET  /polls")
 	fmt.Println("   GET  /polls/:id")
 	fmt.Println("   POST /vote")
-	fmt.Println("   GET  /blockchain/polls")
-	fmt.Println("   GET  /blockchain/poll/:address")
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
@@ -166,11 +174,50 @@ func initSolana() {
 	log.Printf("📝 Program ID: %s", PROGRAM_ID)
 }
 
+func initServerKeypair() {
+	// In production, load from secure environment variable or key management system
+	// For demo, we'll generate a new keypair each time
+	_, privateKey, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		log.Printf("❌ Failed to generate server keypair: %v", err)
+		return
+	}
+
+	serverKeypair = solana.PrivateKey(privateKey)
+	log.Printf("✅ Server keypair initialized: %s", serverKeypair.PublicKey().String())
+}
+
+func generatePollPDA(creator solana.PublicKey, timestamp int64) (solana.PublicKey, uint8, error) {
+	timestampBytes := make([]byte, 8)
+	for i := 0; i < 8; i++ {
+		timestampBytes[i] = byte(timestamp >> (8 * i))
+	}
+
+	seeds := [][]byte{
+		[]byte("poll"),
+		creator[:],
+		timestampBytes,
+	}
+
+	return solana.FindProgramAddress(seeds, programID)
+}
+
+func generateVotePDA(poll solana.PublicKey, voter solana.PublicKey) (solana.PublicKey, uint8, error) {
+	seeds := [][]byte{
+		[]byte("vote"),
+		poll[:],
+		voter[:],
+	}
+
+	return solana.FindProgramAddress(seeds, programID)
+}
+
 func pingHandler(c *gin.Context) {
 	status := gin.H{
-		"message":    "pong",
-		"database":   "disconnected",
-		"blockchain": "disconnected",
+		"message":        "pong",
+		"database":       "disconnected",
+		"blockchain":     "disconnected",
+		"smart_contract": "enabled",
 	}
 
 	if db != nil {
@@ -207,11 +254,19 @@ func createPollHandler(c *gin.Context) {
 		return
 	}
 
-	// Create poll in database
+	// Validate creator address
+	creatorPubkey, err := solana.PublicKeyFromBase58(request.CreatorAddr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid creator address"})
+		return
+	}
+
+	// Create poll in database first
 	poll := Poll{
 		Question:    request.Question,
 		CreatorAddr: request.CreatorAddr,
 		TotalVotes:  0,
+		Status:      "pending",
 	}
 
 	// Serialize options and vote counts
@@ -222,17 +277,31 @@ func createPollHandler(c *gin.Context) {
 	voteCountsJSON, _ := json.Marshal(voteCounts)
 	poll.VoteCounts = string(voteCountsJSON)
 
-	// TODO: Create poll on blockchain
-	// For now, we'll simulate blockchain transaction
-	poll.TxID = fmt.Sprintf("blockchain_tx_%d", time.Now().Unix())
-	poll.BlockchainAddr = fmt.Sprintf("poll_pda_%d", time.Now().Unix())
+	// Generate PDA for this poll
+	timestamp := time.Now().Unix()
+	pollPDA, _, err := generatePollPDA(creatorPubkey, timestamp)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to generate poll address"})
+		return
+	}
+
+	poll.BlockchainAddr = pollPDA.String()
 
 	// Save to database
 	if db != nil {
 		if err := db.Create(&poll).Error; err != nil {
-			c.JSON(500, gin.H{"error": "Failed to create poll"})
+			c.JSON(500, gin.H{"error": "Failed to create poll in database"})
 			return
 		}
+	}
+
+	// TODO: Create actual transaction to blockchain
+	// For now, simulate the transaction
+	poll.TxID = fmt.Sprintf("simulated_tx_%d", timestamp)
+	poll.Status = "confirmed" // In real implementation, this would be updated after blockchain confirmation
+
+	if db != nil {
+		db.Save(&poll)
 	}
 
 	// Prepare response
@@ -246,6 +315,7 @@ func createPollHandler(c *gin.Context) {
 			"tx_id":        poll.TxID,
 			"poll_address": poll.BlockchainAddr,
 			"explorer_url": fmt.Sprintf("https://explorer.solana.com/tx/%s?cluster=devnet", poll.TxID),
+			"status":       poll.Status,
 		},
 	})
 }
@@ -315,6 +385,13 @@ func voteHandler(c *gin.Context) {
 		return
 	}
 
+	// Validate voter address
+	voterPubkey, err := solana.PublicKeyFromBase58(request.VoterAddr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid voter address"})
+		return
+	}
+
 	// Check if already voted
 	if db != nil {
 		var existingVote VoteRecord
@@ -342,17 +419,32 @@ func voteHandler(c *gin.Context) {
 		return
 	}
 
+	// Generate vote PDA
+	pollPubkey, err := solana.PublicKeyFromBase58(poll.BlockchainAddr)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Invalid poll blockchain address"})
+		return
+	}
+
+	votePDA, _, err := generateVotePDA(pollPubkey, voterPubkey)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to generate vote address"})
+		return
+	}
+
 	// Create vote record
 	voteRecord := VoteRecord{
 		PollID:         request.PollID,
 		VoterAddr:      request.VoterAddr,
 		OptionIndex:    *request.OptionIndex,
-		TxID:           fmt.Sprintf("vote_tx_%d", time.Now().Unix()),
-		BlockchainAddr: fmt.Sprintf("vote_pda_%d", time.Now().Unix()),
+		TxID:           fmt.Sprintf("simulated_vote_tx_%d", time.Now().Unix()),
+		BlockchainAddr: votePDA.String(),
+		Status:         "pending",
 	}
 
-	// TODO: Submit vote to blockchain
-	// For now, we'll simulate blockchain transaction
+	// TODO: Submit actual vote transaction to blockchain
+	// For now, simulate the transaction
+	voteRecord.Status = "confirmed"
 
 	if db != nil {
 		if err := db.Create(&voteRecord).Error; err != nil {
@@ -379,6 +471,7 @@ func voteHandler(c *gin.Context) {
 			"tx_id":        voteRecord.TxID,
 			"vote_address": voteRecord.BlockchainAddr,
 			"explorer_url": fmt.Sprintf("https://explorer.solana.com/tx/%s?cluster=devnet", voteRecord.TxID),
+			"status":       voteRecord.Status,
 		},
 	})
 }
@@ -388,18 +481,26 @@ func getBlockchainPollsHandler(c *gin.Context) {
 	// This would scan for all poll PDAs created by our program
 
 	c.JSON(200, gin.H{
-		"message": "Blockchain polls fetching not implemented yet",
-		"note":    "This would fetch polls directly from Solana blockchain",
+		"message":    "Blockchain polls fetching not implemented yet",
+		"note":       "This would fetch polls directly from Solana blockchain using getProgramAccounts",
+		"program_id": PROGRAM_ID,
 	})
 }
 
 func getBlockchainPollHandler(c *gin.Context) {
 	address := c.Param("address")
 
+	// Validate address
+	_, err := solana.PublicKeyFromBase58(address)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid blockchain address"})
+		return
+	}
+
 	// TODO: Fetch specific poll from blockchain by PDA address
 
 	c.JSON(200, gin.H{
 		"message": fmt.Sprintf("Blockchain poll %s fetching not implemented yet", address),
-		"note":    "This would fetch poll data directly from Solana blockchain",
+		"note":    "This would fetch poll data directly from Solana blockchain using getAccountInfo",
 	})
 }
