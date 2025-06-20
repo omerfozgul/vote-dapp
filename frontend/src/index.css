@@ -1,0 +1,435 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0a0a;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+.App {
+  text-align: center;
+}
+
+/* Verdict specific styles - Enhanced to match Figma */
+.verdict-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 30%, #1a4d3a 70%, #0d2818 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Enhanced floating particles background */
+.verdict-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 15% 30%, rgba(0, 255, 136, 0.12) 0%, transparent 40%),
+              radial-gradient(circle at 85% 20%, rgba(0, 255, 136, 0.08) 0%, transparent 35%),
+              radial-gradient(circle at 70% 70%, rgba(0, 255, 136, 0.1) 0%, transparent 45%),
+              radial-gradient(circle at 30% 80%, rgba(0, 255, 136, 0.06) 0%, transparent 30%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Header improvements to match Figma */
+.verdict-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 3rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(30px);
+  border-bottom: 1px solid rgba(0, 255, 136, 0.15);
+  position: relative;
+  z-index: 10;
+}
+
+.verdict-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.verdict-logo img {
+  height: 36px;
+  width: auto;
+}
+
+.verdict-nav {
+  display: flex;
+  gap: 3rem;
+  position: relative;
+}
+
+.verdict-nav a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.verdict-nav a:hover,
+.verdict-nav a.active {
+  color: #00ff88;
+}
+
+/* Green underline for active nav item */
+.verdict-nav a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00ff88, #22c55e);
+  border-radius: 2px;
+}
+
+/* Enhanced hero section to match Figma exactly */
+.verdict-hero {
+  text-align: center;
+  padding: 8rem 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 5;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.verdict-hero h1 {
+  font-size: 4.5rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #ffffff 0%, #00ff88 40%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+  max-width: 900px;
+}
+
+.verdict-hero p {
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 3rem;
+  font-weight: 400;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+/* Enhanced button to match Figma */
+.verdict-button {
+  background: linear-gradient(135deg, #00ff88 0%, #22c55e 100%);
+  color: #0a0a0a;
+  font-weight: 800;
+  padding: 1.5rem 3rem;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.4s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  box-shadow: 0 12px 40px rgba(0, 255, 136, 0.4);
+  position: relative;
+  overflow: hidden;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.verdict-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.verdict-button:hover::before {
+  left: 100%;
+}
+
+.verdict-button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(0, 255, 136, 0.5);
+  scale: 1.05;
+}
+
+/* Enhanced section styling */
+.verdict-section {
+  padding: 6rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 5;
+}
+
+.verdict-section h2 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: #ffffff;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.verdict-section .subtitle {
+  color: #00ff88;
+  font-size: 1.6rem;
+  margin-bottom: 4rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Enhanced form styling */
+.poll-form {
+  background: rgba(16, 32, 24, 0.8);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: 32px;
+  padding: 4rem;
+  margin-bottom: 6rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  color: #ffffff;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(15px);
+  font-weight: 500;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #00ff88;
+  box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.form-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+
+/* Enhanced polls grid */
+.polls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 3rem;
+  margin-top: 4rem;
+}
+
+.poll-card {
+  background: rgba(16, 32, 24, 0.6);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 24px;
+  padding: 2.5rem;
+  transition: all 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.poll-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #00ff88, #22c55e);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+.poll-card:hover::before {
+  transform: translateX(0);
+}
+
+.poll-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 30px 80px rgba(0, 255, 136, 0.2);
+  border-color: rgba(0, 255, 136, 0.5);
+}
+
+/* Enhanced vote options */
+.poll-option {
+  display: flex;
+  align-items: center;
+  padding: 1.2rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.poll-option:hover {
+  background: rgba(0, 255, 136, 0.12);
+  border-color: rgba(0, 255, 136, 0.4);
+  transform: translateX(4px);
+}
+
+/* Wallet connected success message */
+.wallet-connected {
+  background: rgba(0, 255, 136, 0.15);
+  padding: 2rem 3rem;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  margin-top: 2rem;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2);
+}
+
+/* Footer enhancements */
+.verdict-footer {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 5rem 2rem 4rem;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  position: relative;
+  z-index: 5;
+}
+
+/* Enhanced responsive design */
+@media (max-width: 1200px) {
+  .verdict-hero h1 {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .verdict-header {
+    padding: 1.5rem 2rem;
+  }
+  
+  .verdict-logo {
+    font-size: 1.5rem;
+  }
+  
+  .verdict-hero {
+    padding: 6rem 1.5rem;
+    min-height: 70vh;
+  }
+  
+  .verdict-hero h1 {
+    font-size: 2.8rem;
+  }
+  
+  .verdict-hero p {
+    font-size: 1.2rem;
+  }
+  
+  .verdict-nav {
+    display: none;
+  }
+  
+  .verdict-section {
+    padding: 4rem 1.5rem;
+  }
+  
+  .verdict-section h2 {
+    font-size: 2.2rem;
+  }
+  
+  .polls-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .poll-form {
+    padding: 3rem 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .verdict-hero h1 {
+    font-size: 2.2rem;
+  }
+  
+  .verdict-button {
+    padding: 1.2rem 2rem;
+    font-size: 1rem;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.loading {
+  animation: pulse 2s infinite;
+}
+
+/* Enhanced glow effect for buttons */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 12px 40px rgba(0, 255, 136, 0.4);
+  }
+  50% {
+    box-shadow: 0 12px 40px rgba(0, 255, 136, 0.6);
+  }
+}
+
+.verdict-button:hover {
+  animation: glow 2s infinite;
+}
+
+/* Text glow effect */
+.verdict-hero h1 {
+  text-shadow: 0 0 40px rgba(0, 255, 136, 0.3),
+               0 0 80px rgba(0, 255, 136, 0.2),
+               0 0 120px rgba(0, 255, 136, 0.1);
+}

@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0a0a;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Temel renkler */
+:root {
+  --primary-green: #1a4d3a;
+  --accent-green: #00ff88;
+  --dark-bg: #0a0a0a;
+  --card-bg: rgba(26, 77, 58, 0.1);
+}
+
+.verdict-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a4d3a 0%, #0d2818 100%);
+}
+
+.verdict-button {
+  background: linear-gradient(135deg, #00ff88 0%, #22c55e 100%);
+  color: #0a0a0a;
+  font-weight: 600;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.verdict-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 255, 136, 0.3);
+}
